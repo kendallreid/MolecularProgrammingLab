@@ -1,0 +1,14 @@
+# CLion
+.idea/
+
+# Build output
+cmake-build-debug/
+cmake-build-release/
+
+# Python virtual environment
+.venv/
+
+# Generated simulation output
+concentrations.csv
+matrices.csv
+plot.gp

@@ -111,6 +111,8 @@ void Tile::calcReacProp()
 // Calculates total propensity of tile by adding all reaction propensities
 void Tile::calcTotalProp()
 {
+	_totalProp = 0;
+
 	for (int i = 0; i < _reacProp.size(); ++i)
 	{
 		_totalProp += _reacProp[i];

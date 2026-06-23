@@ -21,7 +21,7 @@ void Sim::nextReacTime(const double& totalProp)
 // Provides a random number for where reaction takes place at
 int Sim::getRandIndex(int size)
 {
-	std::uniform_int_distribution<> dist(0, size);
+	std::uniform_int_distribution<> dist(0, size - 1);
 	return dist(gen);
 }
 
@@ -48,7 +48,7 @@ int Sim::determineReaction(const double& totalProp, const vector<double>& reacPr
 // Updates matrix by performing reaction at randomly generated position
 void Sim::performReaction(const int& rxn, Tile& tile)
 {
-	int rxnIndex = getRandIndex(tile.getPixelPairPos()[rxn].size() - 1);  // Find a random index for specific reaction
+	int rxnIndex = getRandIndex(tile.getPixelPairPos()[rxn].size());  // Find a random index for specific reaction
 	tile.updateMatrix(rxn, rxnIndex);  // Update matrix pixels
 }
 
@@ -93,6 +93,11 @@ void Sim::printConcToFile(const string& filename)
 void Sim::runSim(double maxTime)
 {
 	Tile tile("input.csv");
+
+	_timeTrack.clear();
+	_timeTrack.push_back(0.0);
+
+	_concOverTime.clear();
 	ofstream csvFile("matrices.csv", std::ios::out | std::ios::trunc);
 	if (csvFile.good())
 	{
