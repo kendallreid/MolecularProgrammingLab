@@ -49,13 +49,13 @@ def animate_matrices_manual(matrices, color_map):
         if event.key == ' ':  # toggle pause
             paused['value'] = not paused['value']
 
-        elif event.key == 'n':  # next frame manually
+        elif event.key == 'right':  # next frame manually
             frame_idx['value'] = (frame_idx['value'] + 1) % len(matrices)
             im.set_array(matrix_to_rgb(matrices[frame_idx['value']], color_map))
             ax.set_title(f"Matrix Step {frame_idx['value']}")
             fig.canvas.draw_idle()
 
-        elif event.key == 'b':  # previous frame manually
+        elif event.key == 'left':  # previous frame manually
             frame_idx['value'] = (frame_idx['value'] - 1) % len(matrices)
             im.set_array(matrix_to_rgb(matrices[frame_idx['value']], color_map))
             ax.set_title(f"Matrix Step {frame_idx['value']}")
