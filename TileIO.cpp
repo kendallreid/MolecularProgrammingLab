@@ -18,38 +18,72 @@
 void TileIO::readFromFile(Tile& tile, const string& filename)
 {
     fstream input(filename);
+
     if (input.good())
     {
         string line;
-        bool readMatrix = false, readReactions = false;
+
+        bool readMatrix = false;
+        bool readReactions = false;
 
         while (getline(input, line))
         {
-            if (line == "---MATRIX---")
+            // Skip empty lines
+            if (line.empty())
+                continue;
+
+            // Skip comments
+            if (line[0] == '#')
+                continue;
+
+            if (line == "!START_TRANSITION_RULES")
             {
-                readMatrix = true;
+                readReactions = true;
+                readMatrix = false;
                 continue;
             }
-            else if (line == "---REACTIONS---")
+            else if (line == "!END_TRANSITION_RULES")
+            {
+                readReactions = false;
+                continue;
+            }
+            else if (line == "!START_INIT_STATE")
+            {
+                readMatrix = true;
+                readReactions = false;
+                continue;
+            }
+            else if (line == "!END_INIT_STATE")
             {
                 readMatrix = false;
-                readReactions = true;
+                continue;
+            }
+            else if (line == "!START_COLORMAP")
+            {
+                continue;
+            }
+            else if (line == "!END_COLORMAP")
+            {
                 continue;
             }
 
-            if (readMatrix)
-            {
-                populateMatrix(tile, line);
-                continue;
-            }
-            else if (readReactions)
+            // Read reaction
+            if (readReactions)
             {
                 populateReactions(tile, line);
-                continue;
+            }
+
+            // Read matrix row
+            else if (readMatrix)
+            {
+                populateMatrix(tile, line);
             }
         }
     }
-    else { cout << "File not properly opened" << endl; }
+    else
+    {
+        cout << "File not properly opened" << endl;
+    }
     input.close();
 }
 
@@ -58,7 +92,6 @@ void TileIO::readFromFile(Tile& tile, const string& filename)
 // Adds the parsed row to the Tile's _pixelMatrix.
 void TileIO::populateMatrix(Tile& tile, string& line)
 {
-    // Check if reached end of matrix input within file
     if (line.empty())
         return;
 
@@ -66,12 +99,16 @@ void TileIO::populateMatrix(Tile& tile, string& line)
     stringstream ss(line);
     string reactant;
 
-    // Add reactant to proper row in matrix
-    while (getline(ss, reactant, ','))
+    // Read each space-separated reactant from the row
+    while (ss >> reactant)
+    {
         row.push_back(reactant);
+    }
 
-    // Add rows to matrix
-    tile._pixelMatrix.push_back(row);
+    if (!row.empty())
+    {
+        tile._pixelMatrix.push_back(row);
+    }
 }
 
 // Parses a single line of the file as a reaction and adds it to the Tile.
@@ -89,31 +126,35 @@ void TileIO::populateReactions(Tile& tile, string& line)
     if (line.empty())
         return;
 
-    // Split into reaction and rate
+    // Example line:
+    // A + B -> C + D (1)
+
     stringstream ss(line);
-    string reaction, rate;
-    getline(ss, reaction, ',');
-    getline(ss, rate);
 
-    // Split into reactants and products
-    string reactant, product;
-    stringstream reactSs(reaction);
-    getline(reactSs, reactant, '=');
-    getline(reactSs, product);
+    string firstReactant;
+    string plus;
+    string secondReactant;
+    string arrow;
+    string firstProduct;
+    string secondProduct;
+    string rate;
 
-    // Parse reactants
-    unordered_set<string> reactants;  // Set of all reactants
-    stringstream reacSs(reactant);
-    string val;
-    while (getline(reacSs, val, '+'))
-        reactants.insert(val);
+    // Read each part of reaction
+    ss >> firstReactant
+       >> plus
+       >> secondReactant
+       >> arrow
+       >> firstProduct
+       >> plus
+       >> secondProduct
+       >> rate;
 
-    // Parse products
-    stringstream prodSs(product);
-    string first, second;
-    getline(prodSs, first, '+');
-    getline(prodSs, second);
-    pair<string, string> products(first, second);
+    // Remove parentheses from rate
+    rate = rate.substr(1, rate.size() - 2);
+
+    // Store reactants and products
+    pair<string, string> reactants(firstReactant, secondReactant);
+    pair<string, string> products(firstProduct, secondProduct);
 
     // Create and store reaction
     Reaction rxn(reactants, products, stod(rate));
@@ -121,7 +162,7 @@ void TileIO::populateReactions(Tile& tile, string& line)
 }
 
 // Print current tile to file at each time step to allow for python visuals
-void TileIO::printMatrixToFile(Tile& tile, const string& filename)
+void TileIO::printMatrixToFile(const Tile& tile, const string& filename)
 {
     std::ofstream csvFile(filename, std::ios::out | std::ios::app);
     if (csvFile.good())

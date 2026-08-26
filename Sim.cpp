@@ -55,7 +55,7 @@ void Sim::performReaction(const int& rxn, Tile& tile)
 // Picks reaction time, reaction, and performs the reaction
 void Sim::simStep(Tile& tile)
 {
-	tile.tileSimStep();  // Pixel pairs and propensities
+	//tile.tileSimStep();  // Pixel pairs and propensities
 	if (tile.getTotalProp() != 0)  // Check if any possible reactions left
 	{
 		nextReacTime(tile.getTotalProp());
@@ -103,7 +103,7 @@ void Sim::runSim(double maxTime)
 	{
 		csvFile.close();  // Close so all old data is gone
 		_concOverTime.push_back(tile.concToVector());  // Starting concentrations
-		tile.tileSimStep();  // Calculates starting propensities so sim can run
+		tile.tileSimStepSetUp();  // Calculates starting propensities so sim can run
 
 		// Open data file for plotting values
 		ofstream csvFileC("concentrations.csv", std::ios::out | std::ios::trunc);
@@ -117,11 +117,14 @@ void Sim::runSim(double maxTime)
 			csvFileC << "\n";
 			csvFileC.close();  // Finish flushing header to file before other data written
 
+			TileIO::printMatrixToFile(tile, "matrices.csv");
+			printConcToFile("concentrations.csv");
+
 			while (_timeTrack[_timeTrack.size() - 1] < maxTime && tile.getTotalProp() > 0)  // Time not run out & reactions still possible
 			{
+				simStep(tile);  // Run reaction
 				TileIO::printMatrixToFile(tile, "matrices.csv");
 				printConcToFile("concentrations.csv");
-				simStep(tile);  // Run reaction
 			}
 			createPlot();
 		}

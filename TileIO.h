@@ -34,6 +34,6 @@ public:
     // When in reaction section of input file, populates reaction rules
     static void populateReactions(Tile& tile, string& line);
     // Prints matrix at each step to output file
-    static void printMatrixToFile(Tile& tile, const string& filename);
+    static void printMatrixToFile(const Tile& tile, const string& filename);
 };
 #endif

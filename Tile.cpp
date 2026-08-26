@@ -41,8 +41,8 @@ void Tile::initConc()
 			++_conc[reactant];
 }
 
-// Finds all possible pixel pairs by looping through tile and checking neighbors of each reactant based on reaction rules
-void Tile::findPixelPairs()
+// Finds all possible pixel pairs for original matrix by looping through tile and checking neighbors of each reactant based on reaction rules
+void Tile::findInitialPixelPairs()
 {
 	for (int row = 0; row < _rowSize; ++row)
 	{
@@ -50,18 +50,90 @@ void Tile::findPixelPairs()
 		{
 			if (col < _colSize - 1)  // Check if in bounds (next column) right
 				populateReacPosVec({ row, col }, { row, col + 1 });  // Inputs valid reaction pixel pair under correct reaction rule
-
-			if (col > 0)  // Check in bounds (previous column) left
-				populateReacPosVec({ row, col }, { row, col - 1 });
-
 			if (row < _rowSize - 1)  // Check if in bounds (lower row) down
 				populateReacPosVec({ row, col }, { row + 1, col });
-
-			if (row > 0)  // Check in bounds (above row) up
-				populateReacPosVec({ row, col }, { row - 1, col });
 		}
 	}
 }
+
+void Tile::removeLocalPairs(pair<int, int> pos) {
+	/*string reactant = _pixelMatrix[pos.first][pos.second];
+
+	for (int rxn = 0; rxn < _reactantPixelPairPos.size(); ++rxn) {
+		if (reactant == _reactions[rxn].reactants.first || reactant == _reactions[rxn].reactants.second) {  // if position reactant is used in a reaction remove surrounding possible reaction pairs
+			auto& reactionVec = _reactantPixelPairPos[rxn];
+			for (int i = reactionVec.size() - 1; i >= 0; --i) {
+				if (reactionVec[i].first == pos || reactionVec[i].second == pos) {
+					reactionVec.erase(reactionVec.begin() + i);
+				}
+			}
+		}
+	}*/
+	for (auto& reactionVec : _reactantPixelPairPos)
+	{
+		for (int i = static_cast<int>(reactionVec.size()) - 1; i >= 0; --i)
+		{
+			if (reactionVec[i].first == pos || reactionVec[i].second == pos)
+			{
+				reactionVec.erase(reactionVec.begin() + i);
+			}
+		}
+	}
+}
+
+void Tile::addLocalPairsHelper(pair<int, int> pos, pair<int, int> otherChangedPos)
+{
+	int row = pos.first;
+	int col = pos.second;
+	pair<int, int> neighbor;
+
+	// Right neighbor
+	if (col < _colSize - 1)
+	{
+		neighbor = { row, col + 1 };
+		if (neighbor != otherChangedPos)
+		{
+			populateReacPosVec({ row, col }, neighbor);
+		}
+	}
+
+	// Left neighbor
+	if (col > 0)
+	{
+		neighbor = { row, col - 1 };
+		if (neighbor != otherChangedPos)
+		{
+			populateReacPosVec(neighbor, { row, col });
+		}
+	}
+
+	// Down neighbor
+	if (row < _rowSize - 1)
+	{
+		neighbor = { row + 1, col };
+		if (neighbor != otherChangedPos)
+		{
+			populateReacPosVec({ row, col }, neighbor);
+		}
+	}
+
+	// Up neighbor
+	if (row > 0)
+	{
+		neighbor = { row - 1, col };
+		if (neighbor != otherChangedPos)
+		{
+			populateReacPosVec(neighbor, { row, col });
+		}
+	}
+}
+
+void Tile::addLocalPairs(pair<int, int> pos1, pair<int,int> pos2) {
+	addLocalPairsHelper(pos1, pos2);
+	addLocalPairsHelper(pos2, pos1);
+	populateReacPosVec(pos1, pos2);
+}
+
 
 // Inputs a valid pixel pair combination under proper reaction rule in _reactantPixelPairPos
 void Tile::populateReacPosVec(pair<int, int> pos1, pair<int, int> pos2)
@@ -69,32 +141,29 @@ void Tile::populateReacPosVec(pair<int, int> pos1, pair<int, int> pos2)
 	string reac1 = _pixelMatrix[pos1.first][pos1.second];
 	string reac2 = _pixelMatrix[pos2.first][pos2.second];
 
-	// Validates both reactants present for reaction rules
 	for (int i = 0; i < _reactions.size(); ++i)
 	{
-		if (reac1 != reac2 && bothInSet(reac1, reac2, _reactions[i]))  // Accounts for different reactants
-			_reactantPixelPairPos[i].emplace_back(pos1, pos2);
+		string r1 = _reactions[i].reactants.first;
+		string r2 = _reactions[i].reactants.second;
 
-		else if (reac1 == reac2 && _reactions[i].reactants.size() == 1 && _reactions[i].reactants.count(reac1))  // Accounts for reactants being the same
+		bool differentReactantsMatch = reac1 != reac2 && ((reac1 == r1 && reac2 == r2) || (reac1 == r2 && reac2 == r1));
+		bool sameReactantsMatch = reac1 == reac2 && r1 == r2 && reac1 == r1;
+
+		if (differentReactantsMatch || sameReactantsMatch)
+		{
 			_reactantPixelPairPos[i].emplace_back(pos1, pos2);
+		}
 	}
-}
-
-// Checks that both reactants are listed under a reactions possible reactants
-// .count should return 1 specifying valid
-bool Tile::bothInSet(const string& reac1, const string& reac2, const Reaction& rxn)
-{
-	return rxn.reactants.count(reac1) && rxn.reactants.count(reac2);
 }
 
 // After previous reaction, find new pixel pairs based on updated reactants then recalculates propensities for next reaction
-void Tile::tileSimStep()
+void Tile::tileSimStepSetUp()
 {
-	for (int i = 0; i < _reactantPixelPairPos.size(); ++i)  // Clear for next possible reactions
+	for (auto& reactionPairs : _reactantPixelPairPos)
 	{
-		_reactantPixelPairPos[i].clear();
+		reactionPairs.clear();
 	}
-	findPixelPairs();
+	findInitialPixelPairs();
 	calcReacProp();
 	calcTotalProp();
 }
@@ -124,12 +193,47 @@ void Tile::calcTotalProp()
 // Previous reactants are updated to products from reaction that occurred
 void Tile::updateMatrix(int rxn, int rxnIndex)
 {
-	pair<pair<int, int>, pair<int, int>> pair = _reactantPixelPairPos[rxn][rxnIndex];  // Get position of pair to update. Gives pair<pair, pair>
+	pair<pair<int, int>, pair<int, int>> pixelPair = _reactantPixelPairPos[rxn][rxnIndex];
+	pair<int, int> pos1 = pixelPair.first;
+	pair<int, int> pos2 = pixelPair.second;
 
-	_pixelMatrix[pair.first.first][pair.first.second] = _reactions[rxn].products.first;  // Update first pixel in matrix with new product
-	_pixelMatrix[pair.second.first][pair.second.second] = _reactions[rxn].products.second;  // Update second pixel in matrix with new product
+	string val1 = _pixelMatrix[pos1.first][pos1.second];
+	string val2 = _pixelMatrix[pos2.first][pos2.second];
 
-	updateConc(rxn);  // Update concentrations of matrix since matrix was changed
+	string r1 = _reactions[rxn].reactants.first;
+	string r2 = _reactions[rxn].reactants.second;
+
+	bool validPair =
+		(val1 == r1 && val2 == r2) ||
+		(val1 == r2 && val2 == r1);
+
+	if (!validPair)
+	{
+		cout << "STALE PAIR FOUND" << endl;
+		return;
+	}
+
+	// Remove old possible pairs involving changed cells
+	removeLocalPairs(pos1);
+	removeLocalPairs(pos2);
+
+	// Update matrix - ensures correct order
+	if (_pixelMatrix[pos1.first][pos1.second] == _reactions[rxn].reactants.first) {
+		_pixelMatrix[pos1.first][pos1.second] = _reactions[rxn].products.first;
+		_pixelMatrix[pos2.first][pos2.second] = _reactions[rxn].products.second;
+	}
+	else {
+		_pixelMatrix[pos1.first][pos1.second] = _reactions[rxn].products.second;
+		_pixelMatrix[pos2.first][pos2.second] = _reactions[rxn].products.first;
+	}
+	updateConc(rxn);
+
+	// add new possible pairs involving changed cells
+	addLocalPairs(pos1,pos2);
+
+	// recalculate propensities from updated possible pair lists
+	calcReacProp();
+	calcTotalProp();
 }
 
 // After a reaction concentrations are updated by subtracting from reactants used, and adding to new products
@@ -140,20 +244,10 @@ void Tile::updateConc(int rxn)
 	{
 		if (rxn == i)
 		{
-			++_conc[_reactions[rxn].products.first];  // Increase product conc
-			++_conc[_reactions[rxn].products.second];  // Increase product conc
-
-			for (const auto& reactant : _reactions[rxn].reactants)  // Decrease each reactant conc
-			{
-				if (_reactions[rxn].reactants.size() == 1)  // If reactants are the same
-				{
-					_conc[reactant] -= 2;
-				}
-				else  // Reactants are different
-				{
-					--_conc[reactant];
-				}
-			}
+			++_conc[_reactions[rxn].products.first];
+			++_conc[_reactions[rxn].products.second];
+			--_conc[_reactions[rxn].reactants.first];
+			--_conc[_reactions[rxn].reactants.second];
 		}
 	}
 }

@@ -37,11 +37,11 @@ using std::endl;
 
 // Struct to store reactants and products for possible reactions per tile
 struct Reaction {
-	unordered_set<string> reactants;
+	pair<string, string> reactants;
 	pair<string, string> products;
 	double rate;
 
-	Reaction(const unordered_set<string>& r, const pair<string, string>& p, const double k)
+	Reaction(const pair<string, string>& r, const pair<string, string>& p, const double k)
 		: reactants(r), products(p), rate(k) {}
 };
 
@@ -60,14 +60,16 @@ public:
 	// Initializes concentration values based on each pixel's reactant
 	void initConc();
 
-	// Finds all possible pixel pairs that adhere to reaction rules
-	void findPixelPairs();
+	// Finds and updates possible pixel pairs that adhere to reaction rules
+	void findInitialPixelPairs();
+	void removeLocalPairs(pair<int, int> pos);
+	void addLocalPairsHelper(pair<int, int> pos, pair<int, int> otherChangedPos);
+	void addLocalPairs(pair<int,int> pos, pair<int,int> pos2);
+
 	// Fills _reactantPixelPairPos with possible pairs - sorted by Reactions possible
 	void populateReacPosVec(pair<int, int> pos1, pair<int, int> pos2);
-	// Check if pixel pair results in a reaction
-	bool bothInSet(const string& reac1, const string& reac2, const Reaction& rxn);
 	// Finds new pixel pairs and recalculates propensities after each reaction
-	void tileSimStep();
+	void tileSimStepSetUp();
 
 	// Calculates propensities based on possible pixel pairs
 	void calcReacProp();

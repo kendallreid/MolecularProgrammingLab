@@ -79,7 +79,7 @@ void SimTests::testPixelPairs() {
     Tile tile;
     tile._pixelMatrix = { {"A","B"},{"C","D"} };
     tile._reactions = { Reaction({ "A","B" }, {"C","D"}, 0.1) };
-    tile.findPixelPairs();
+    tile.findInitialPixelPairs();
     auto pairs = tile._reactantPixelPairPos;
     assert(!pairs.empty());
 }
@@ -89,7 +89,7 @@ void SimTests::testCalcReacProp() {
     Tile tile;
     tile._pixelMatrix = { {"A","B"} };
     tile._reactions = { Reaction({ "A","B" }, {"C","D"}, 0.1) };
-    tile.findPixelPairs();
+    tile.findInitialPixelPairs();
     tile.calcReacProp();
     for (auto p : tile._reacProp) assert(p >= 0);
 }
@@ -99,7 +99,7 @@ void SimTests::testTotalProp() {
     Tile tile;
     tile._pixelMatrix = { {"A","B"} };
     tile._reactions = { Reaction({ "A","B" }, {"C","D"}, 0.1) };
-    tile.findPixelPairs();
+    tile.findInitialPixelPairs();
     tile.calcReacProp();
     tile.calcTotalProp();
     assert(tile.getTotalProp() >= 0);
@@ -110,7 +110,7 @@ void SimTests::testUpdateMatrix() {
     Tile tile;
     tile._pixelMatrix = { {"A","B"} };
     tile._reactions = { Reaction({ "A","B" }, {"C","D"}, 0.1) };
-    tile.findPixelPairs();
+    tile.findInitialPixelPairs();
     tile.calcReacProp();
     tile.calcTotalProp();
     if (!tile._reactantPixelPairPos[0].empty())
@@ -123,7 +123,7 @@ void SimTests::testUpdateConc() {
     Tile tile;
     tile._pixelMatrix = { {"A","B"} };
     tile._reactions = { Reaction({ "A","B" }, {"C","D"}, 0.1) };
-    tile.findPixelPairs();
+    tile.findInitialPixelPairs();
     tile.calcReacProp();
     tile.calcTotalProp();
     if (!tile._reactantPixelPairPos[0].empty())
@@ -136,7 +136,7 @@ void SimTests::testSingleReactantReaction() {
     Tile tile;
     tile._pixelMatrix = { {"A","A"} };
     tile._reactions = { Reaction({ "A" }, {"B","C"}, 0.1) };
-    tile.findPixelPairs();
+    tile.findInitialPixelPairs();
     tile.calcReacProp();
     assert(tile._reacProp[0] >= 0);
 }
@@ -146,7 +146,7 @@ void SimTests::testNoReaction() {
     Tile tile;
     tile._pixelMatrix = { {"A","B"} };
     tile._reactions = { Reaction({ "C","D" }, {"E","F"}, 0.1) };
-    tile.findPixelPairs();
+    tile.findInitialPixelPairs();
     tile.calcReacProp();
     for (auto p : tile._reacProp) assert(p == 0);
 }
@@ -164,7 +164,7 @@ void SimTests::testTileSimStep() {
     Tile tile;
     tile._pixelMatrix = { {"A","B"},{"C","D"} };
     tile._reactions = { Reaction({ "A","B" }, {"C","D"}, 0.1) };
-    tile.findPixelPairs();
+    tile.findInitialPixelPairs();
     tile.tileSimStep();
     for (auto &vec : tile._reactantPixelPairPos) assert(vec.empty() || vec.size() >= 0);
 }
