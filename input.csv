@@ -1,20 +1,61 @@
-# Small parser test
+# Small XOR gate test
+# 1 XOR 1 = 0
+# Expected output: red 0
 
 max_duration = 100
 
 !START_TRANSITION_RULES
-# Turn B into A when beside A
-(1) A + B -> A + A
+
+# Wire movement
+(1) 0 + B -> B + 0
+(1) 1 + B -> B + 1
+
+# XOR gate - Load
+(1) 0 + BXx -> B + 0Xx
+(1) 1 + BXx -> B + 1Xx
+(1) 0 + BXy -> B + 0Xy
+(1) 1 + BXy -> B + 1Xy
+
+(1) 0Xx + BXz -> HXx + 0Xz
+(1) 1Xx + BXz -> HXx + 1Xz
+
+# XOR logic
+(1) 0Xy + 0Xz -> HXy + 0Xk
+(1) 0Xy + 1Xz -> HXy + 1Xk
+(1) 1Xy + 0Xz -> HXy + 1Xk
+(1) 1Xy + 1Xz -> HXy + 0Xk
+
+# Unload
+(1) 0Xk + B -> RRXz + 0
+(1) 1Xk + B -> RRXz + 1
+
+# Reset
+(1) RRXz + HXx -> RXz + BXx
+(1) RXz + HXy -> BXz + BXy
+
 !END_TRANSITION_RULES
 
+
 !START_COLORMAP
-{A} A: (255, 0, 0)
-{B} B: (0, 0, 255)
+
+{Inert} I: (255,255,255)
+{Blank Wire} B: (191,191,191)
+
+{0 Signal} 0, 0Xx, 0Xy, 0Xz, 0Xk: (215,25,28)
+{1 Signal} 1, 1Xx, 1Xy, 1Xz, 1Xk: (229,223,70)
+
+{XOR Gate} BXx, BXy, BXz: (79,29,189)
+
+{Holding Input} HXx, HXy: (200,200,100)
+
+{Reset} RRXz, RXz: (255,102,0)
+
 !END_COLORMAP
 
+
 !START_INIT_STATE
-A,B,A,B
-B,A,B,A
-A,B,A,B
-B,A,B,A
+I,I,I,I
+1,BXx,BXz,B
+I,I,BXy,I
+I,I,1,I
 !END_INIT_STATE
