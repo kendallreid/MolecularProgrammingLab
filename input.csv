@@ -1,14 +1,20 @@
-# Simple max duration test
+# Small parser test
 
-max_duration = 2
+max_duration = 100
 
 !START_TRANSITION_RULES
-A + B -> A + A (1)
+# Turn B into A when beside A
+(1) A + B -> A + A
 !END_TRANSITION_RULES
 
+!START_COLORMAP
+{A} A: (255, 0, 0)
+{B} B: (0, 0, 255)
+!END_COLORMAP
+
 !START_INIT_STATE
-A B A B
-B A B A
-A B A B
-B A B A
+A,B,A,B
+B,A,B,A
+A,B,A,B
+B,A,B,A
 !END_INIT_STATE

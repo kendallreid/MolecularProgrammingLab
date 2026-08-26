@@ -107,13 +107,27 @@ void TileIO::populateMatrix(Tile& tile, string& line)
         return;
 
     vector<string> row;
-    stringstream ss(line);
     string reactant;
 
-    // Read each space-separated reactant from the row
-    while (ss >> reactant)
+    // If commas are present, read comma-separated values
+    if (line.find(',') != string::npos)
     {
-        row.push_back(reactant);
+        stringstream ss(line);
+
+        while (getline(ss, reactant, ','))
+        {
+            row.push_back(reactant);
+        }
+    }
+    else
+    {
+        // Otherwise read space-separated values
+        stringstream ss(line);
+
+        while (ss >> reactant)
+        {
+            row.push_back(reactant);
+        }
     }
 
     if (!row.empty())
@@ -133,42 +147,62 @@ void TileIO::populateMatrix(Tile& tile, string& line)
 //   6. Append the Reaction to the Tile's _reactions vector
 void TileIO::populateReactions(Tile& tile, string& line)
 {
-    // Check if reached end of reaction input within file
     if (line.empty())
         return;
 
-    // Example line:
-    // A + B -> C + D (1)
+    // Ignore comment lines inside reaction section
+    if (line[0] == '#')
+        return;
 
     stringstream ss(line);
 
     string firstReactant;
-    string plus;
     string secondReactant;
-    string arrow;
     string firstProduct;
     string secondProduct;
+
+    string plus;
+    string arrow;
     string rate;
 
-    // Read each part of reaction
-    ss >> firstReactant
-       >> plus
-       >> secondReactant
-       >> arrow
-       >> firstProduct
-       >> plus
-       >> secondProduct
-       >> rate;
+    // Surface CRN files may store rate either:
+    // (1) A + B -> C + D
+    // or
+    // A + B -> C + D (1)
+
+    if (line[0] == '(')
+    {
+        // Rate is first
+        ss >> rate
+           >> firstReactant
+           >> plus
+           >> secondReactant
+           >> arrow
+           >> firstProduct
+           >> plus
+           >> secondProduct;
+    }
+    else
+    {
+        // Rate is last
+        ss >> firstReactant
+           >> plus
+           >> secondReactant
+           >> arrow
+           >> firstProduct
+           >> plus
+           >> secondProduct
+           >> rate;
+    }
 
     // Remove parentheses from rate
     rate = rate.substr(1, rate.size() - 2);
 
-    // Store reactants and products
     pair<string, string> reactants(firstReactant, secondReactant);
     pair<string, string> products(firstProduct, secondProduct);
 
-    // Create and store reaction
     Reaction rxn(reactants, products, stod(rate));
+
     tile._reactions.push_back(rxn);
 }
 
