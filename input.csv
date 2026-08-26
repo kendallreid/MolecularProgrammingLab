@@ -1,8 +1,14 @@
+# Simple max duration test
+
+max_duration = 2
+
 !START_TRANSITION_RULES
 A + B -> A + A (1)
 !END_TRANSITION_RULES
 
 !START_INIT_STATE
-A B
-B A
+A B A B
+B A B A
+A B A B
+B A B A
 !END_INIT_STATE

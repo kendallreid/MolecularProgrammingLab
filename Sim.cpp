@@ -90,7 +90,7 @@ void Sim::printConcToFile(const string& filename)
 // Opens output and input files
 // Runs until total propensity is 0 or specified time runs out
 // Generates output concentrations, matrices, and visual plot
-void Sim::runSim(double maxTime)
+void Sim::runSim()
 {
 	Tile tile("input.csv");
 
@@ -120,7 +120,7 @@ void Sim::runSim(double maxTime)
 			TileIO::printMatrixToFile(tile, "matrices.csv");
 			printConcToFile("concentrations.csv");
 
-			while (_timeTrack[_timeTrack.size() - 1] < maxTime && tile.getTotalProp() > 0)  // Time not run out & reactions still possible
+			while (_timeTrack[_timeTrack.size() - 1] < Tile::getMaxDuration() && tile.getTotalProp() > 0)  // Time not run out & reactions still possible
 			{
 				simStep(tile);  // Run reaction
 				TileIO::printMatrixToFile(tile, "matrices.csv");

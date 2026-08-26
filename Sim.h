@@ -45,7 +45,7 @@ public:
     // One cycle of picking time, reaction, position, and performing reaction
     void simStep(Tile& tile);
     // Runs entire simulation
-    void runSim(double maxTime);
+    void runSim();
 
     // Prints all concentrations to file at each time step
     void printConcToFile(const string& filename);

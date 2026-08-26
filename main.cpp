@@ -4,5 +4,5 @@
 int main()
 {
     Sim simulation;
-    simulation.runSim(100);
+    simulation.runSim();
 }

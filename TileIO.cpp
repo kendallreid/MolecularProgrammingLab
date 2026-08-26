@@ -22,58 +22,68 @@ void TileIO::readFromFile(Tile& tile, const string& filename)
     if (input.good())
     {
         string line;
-
         bool readMatrix = false;
         bool readReactions = false;
 
         while (getline(input, line))
         {
-            // Skip empty lines
+            // Ignore blank lines
             if (line.empty())
                 continue;
 
-            // Skip comments
+            // Ignore comments
             if (line[0] == '#')
                 continue;
 
+            // Read max simulation duration
+            if (line.find("max_duration") == 0)
+            {
+                string setting;
+                string equals;
+
+                stringstream ss(line);
+                ss >> setting >> equals >> tile._maxDuration;
+
+                continue;
+            }
+
+            // Start reading reaction rules
             if (line == "!START_TRANSITION_RULES")
             {
                 readReactions = true;
                 readMatrix = false;
                 continue;
             }
+
+            // Stop reading reaction rules
             else if (line == "!END_TRANSITION_RULES")
             {
                 readReactions = false;
                 continue;
             }
+
+            // Start reading initial matrix
             else if (line == "!START_INIT_STATE")
             {
                 readMatrix = true;
                 readReactions = false;
                 continue;
             }
+
+            // Stop reading initial matrix
             else if (line == "!END_INIT_STATE")
             {
                 readMatrix = false;
                 continue;
             }
-            else if (line == "!START_COLORMAP")
-            {
-                continue;
-            }
-            else if (line == "!END_COLORMAP")
-            {
-                continue;
-            }
 
-            // Read reaction
+            // Read current line as a reaction
             if (readReactions)
             {
                 populateReactions(tile, line);
             }
 
-            // Read matrix row
+            // Read current line as a matrix row
             else if (readMatrix)
             {
                 populateMatrix(tile, line);
@@ -84,6 +94,7 @@ void TileIO::readFromFile(Tile& tile, const string& filename)
     {
         cout << "File not properly opened" << endl;
     }
+
     input.close();
 }
 

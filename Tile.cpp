@@ -8,6 +8,7 @@
  ******************************************************************************/
 
 #include "Tile.h"
+double Tile::_maxDuration = 0;
 
 // Initializes tile through helper TileIO reading input file and updates initial concentrations and size
 Tile::Tile(const string& filename) : _rowSize(0), _colSize(0), _totalProp(0)
@@ -37,8 +38,21 @@ void Tile::updateSizeParams()
 void Tile::initConc()
 {
 	for (const auto& row : _pixelMatrix)
+	{
 		for (const auto& reactant : row)
+		{
 			++_conc[reactant];
+		}
+	}
+
+	for (const auto& reaction : _reactions)
+	{
+		_conc[reaction.reactants.first];
+		_conc[reaction.reactants.second];
+
+		_conc[reaction.products.first];
+		_conc[reaction.products.second];
+	}
 }
 
 // Finds all possible pixel pairs for original matrix by looping through tile and checking neighbors of each reactant based on reaction rules

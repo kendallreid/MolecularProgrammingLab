@@ -82,6 +82,7 @@ public:
 	const vector<Reaction>& getReactions() const { return _reactions; }
 	const vector<vector<string>>& getPixelMatrix() const { return _pixelMatrix; }
 	const unordered_map<string, int>& getConc() const { return _conc; }
+	static double getMaxDuration() { return _maxDuration; }
 
 	// Updates tile pixels after each reaction
 	void updateMatrix(int rxn, int rxnIndex);
@@ -89,6 +90,9 @@ public:
 	void updateConc(int rxn);
 	// Place concentrations in vector to later print to file
 	const vector<pair<string, int>> concToVector();
+
+public:
+	static double _maxDuration;
 
 private:
 	int _rowSize, _colSize, _numReactions;
